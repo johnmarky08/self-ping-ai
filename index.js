@@ -118,20 +118,24 @@ app.post('/add', async (req, res) => {
   try {
     const { url } = req.body;
 
-    const urlF = await URLModel.find({ url });
+    // Check if the URL already exists in the database
+    const urlExists = await URLModel.findOne({ url });
 
-    if (!urlF) {
+    if (!urlExists) {
       // Save the URL to MongoDB
       const newURL = new URLModel({ url });
+      await newURL.save();
     }
-    await newURL.save();
 
     // Redirect to /?url=THEIR_URL
     res.redirect(`/?url=${encodeURIComponent(url)}`);
   } catch (e) {
-    console.log(e);
+    console.error(e);
+    // Send a 500 status code with an error message
+    res.status(500).send('An error occurred while adding the URL.');
   }
 });
+
 
 // Ping the stored URL every second
 setInterval(async () => {
