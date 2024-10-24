@@ -7,10 +7,7 @@ const app = express();
 const PORT = 3000;
 
 // MongoDB connection
-mongoose.connect(encodeURI(process.env.MONGO_URL), {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+mongoose.connect(encodeURI(process.env.MONGO_URL));
 
 // Define a schema for storing URLs
 const urlSchema = new mongoose.Schema({
