@@ -1,0 +1,20 @@
+{
+  "name": "self-pinger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "John Marky Natividad",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^18.0.6",
+    "axios": "^1.7.7",
+    "express": "^4.21.1"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
