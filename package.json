@@ -1,7 +1,7 @@
 {
   "name": "self-pinger",
   "version": "1.0.0",
-  "description": "",
+  "description": "Plugin for FB Page AI",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
