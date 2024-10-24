@@ -123,8 +123,8 @@ app.post('/add', async (req, res) => {
     if (!urlF) {
       // Save the URL to MongoDB
       const newURL = new URLModel({ url });
-      await newURL.save();
     }
+    await newURL.save();
 
     // Redirect to /?url=THEIR_URL
     res.redirect(`/?url=${encodeURIComponent(url)}`);
