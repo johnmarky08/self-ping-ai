@@ -115,6 +115,7 @@ app.get('/', (req, res) => {
 
 // Handle the form submission and store the URL in MongoDB
 app.post('/add', async (req, res) => {
+  try {
   const { url } = req.body;
   
   // Save the URL to MongoDB
@@ -123,6 +124,9 @@ app.post('/add', async (req, res) => {
   
   // Redirect to /?url=THEIR_URL
   res.redirect(`/?url=${encodeURIComponent(url)}`);
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 // Ping the stored URL every second
