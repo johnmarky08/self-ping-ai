@@ -69,6 +69,7 @@ app.get('/', (req, res) => {
                 <tr>
                     <th>Status</th>
                     <th>Time</th>
+                    <th>URL</th>
                 </tr>
             </table>
             <script>
@@ -80,8 +81,10 @@ app.get('/', (req, res) => {
                     const newRow = resultsTable.insertRow();
                     const statusCell = newRow.insertCell(0);
                     const timeCell = newRow.insertCell(1);
+                    const urlCell = newRow.insertCell(2);
                     statusCell.textContent = result.status;
                     timeCell.textContent = result.time;
+                    urlCell.textContent = result.url
                 };
             </script>
         </body>
