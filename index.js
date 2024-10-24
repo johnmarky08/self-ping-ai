@@ -59,7 +59,7 @@ app.get('/events', (req, res) => {
 // Serve the form for URL submission
 app.get('/', (req, res) => {
   const userUrl = req.query.url ? decodeURIComponent(req.query.url) : '';
-  
+
   res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -116,14 +116,19 @@ app.get('/', (req, res) => {
 // Handle the form submission and store the URL in MongoDB
 app.post('/add', async (req, res) => {
   try {
-  const { url } = req.body;
-  
-  // Save the URL to MongoDB
-  const newURL = new URLModel({ url });
-  await newURL.save();
-  
-  // Redirect to /?url=THEIR_URL
-  res.redirect(`/?url=${encodeURIComponent(url)}`);
+    const { url } = req.body;
+
+    const urls = await URLModel.find();
+    urls.forEach(urlDoc => {
+      if (urlDoc.url !== url) {
+        // Save the URL to MongoDB
+        const newURL = new URLModel({ url });
+        await newURL.save();
+      }
+    });
+    
+    // Redirect to /?url=THEIR_URL
+    res.redirect(`/?url=${encodeURIComponent(url)}`);
   } catch (e) {
     console.log(e);
   }
