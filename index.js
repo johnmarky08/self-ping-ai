@@ -119,7 +119,7 @@ app.post('/add', async (req, res) => {
     const { url } = req.body;
 
     // Check if the URL already exists in the database
-    const urlExists = await URLModel.findOne({ url });
+    const urlExists = await URLModel.find({ url });
 
     if (!urlExists) {
       // Save the URL to MongoDB
