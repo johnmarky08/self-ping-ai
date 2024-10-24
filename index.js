@@ -118,15 +118,14 @@ app.post('/add', async (req, res) => {
   try {
     const { url } = req.body;
 
-    const urls = await URLModel.find();
-    urls.forEach(urlDoc => {
-      if (urlDoc.url !== url) {
-        // Save the URL to MongoDB
-        const newURL = new URLModel({ url });
-        await newURL.save();
-      }
-    });
-    
+    const urlF = await URLModel.find({ url });
+
+    if (!urlF) {
+      // Save the URL to MongoDB
+      const newURL = new URLModel({ url });
+      await newURL.save();
+    }
+
     // Redirect to /?url=THEIR_URL
     res.redirect(`/?url=${encodeURIComponent(url)}`);
   } catch (e) {
