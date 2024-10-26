@@ -1,34 +1,26 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
 
 const app = express();
 const PORT = 3000;
-
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URL);
-
-// Define a schema for storing URLs
-const urlSchema = new mongoose.Schema({
-  url: { type: String, required: true }
-});
-const URLModel = mongoose.model('URL', urlSchema);
-
-app.use(bodyParser.urlencoded({ extended: true }));
 
 let pingResults = [];
 let clients = [];
 
 // Function to ping the URL
-const pingURL = async (url) => {
+const pingURL = async () => {
   try {
+    const url = process.env.URL;
     const response = await axios.get(url);
-    const result = { url, status: 'Success', time: new Date().toLocaleString() };
+    const result = {
+      url,
+      status: "Success",
+      time: new Date().toLocaleString(),
+    };
     pingResults.push(result);
     notifyClients(result);
   } catch (error) {
-    const result = { url, status: 'Error', time: new Date().toLocaleString() };
+    const result = { url, status: "Error", time: new Date().toLocaleString() };
     pingResults.push(result);
     notifyClients(result);
   }
@@ -42,31 +34,32 @@ const notifyClients = (result) => {
 };
 
 // Handle client connection for SSE
-app.get('/events', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
+app.get("/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
 
   // Add the client to the clients list
   clients.push({ res });
 
   // Remove the client when the connection is closed
-  req.on('close', () => {
-    clients = clients.filter(client => client.res !== res);
+  req.on("close", () => {
+    clients = clients.filter((client) => client.res !== res);
   });
 });
 
-// Serve the form for URL submission
-app.get('/', (req, res) => {
-  const userUrl = req.query.url ? decodeURIComponent(req.query.url) : '';
+// Ping every second
+setInterval(pingURL, 1000);
 
+// Serve the main HTML page
+app.get("/", (req, res) => {
   res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Ping URL</title>
+            <title>Ping Results</title>
             <style>
                 body { font-family: Arial, sans-serif; }
                 table { width: 100%; border-collapse: collapse; }
@@ -75,15 +68,7 @@ app.get('/', (req, res) => {
             </style>
         </head>
         <body>
-            <h1>Enter URL to Ping</h1>
-            <form action="/add" method="POST">
-                <label for="url">URL:</label>
-                <input type="text" id="url" name="url" required value="${userUrl}">
-                <button type="submit">Submit</button>
-            </form>
-            
-            ${userUrl ? `
-            <h1>Ping Results for ${userUrl}</h1>
+            <h1>Ping Results</h1>
             <table id="resultsTable">
                 <tr>
                     <th>Status</th>
@@ -93,57 +78,23 @@ app.get('/', (req, res) => {
             </table>
             <script>
                 const resultsTable = document.getElementById('resultsTable');
+
                 const eventSource = new EventSource('/events');
                 eventSource.onmessage = function(event) {
                     const result = JSON.parse(event.data);
-                    if (result.url === '${userUrl}') {
-                        const newRow = resultsTable.insertRow();
-                        const statusCell = newRow.insertCell(0);
-                        const timeCell = newRow.insertCell(1);
-                        const urlCell = newRow.insertCell(2);
-                        statusCell.textContent = result.status;
-                        timeCell.textContent = result.time;
-                        urlCell.textContent = result.url;
-                    }
+                    const newRow = resultsTable.insertRow();
+                    const statusCell = newRow.insertCell(0);
+                    const timeCell = newRow.insertCell(1);
+                    const urlCell = newRow.insertCell(2);
+                    statusCell.textContent = result.status;
+                    timeCell.textContent = result.time;
+                    urlCell.textContent = result.url
                 };
             </script>
-            ` : ''}
         </body>
         </html>
     `);
 });
-
-// Handle the form submission and store the URL in MongoDB
-app.post('/add', async (req, res) => {
-  try {
-    const { url } = req.body;
-
-    // Check if the URL already exists in the database
-    const urlExists = await URLModel.findOne({ url });
-
-    if (!urlExists) {
-      // Save the URL to MongoDB
-      const newURL = new URLModel({ url });
-      await newURL.save();
-    }
-
-    // Redirect to /?url=THEIR_URL
-    res.redirect(`/?url=${encodeURIComponent(url)}`);
-  } catch (e) {
-    console.error(e);
-    // Send a 500 status code with an error message
-    res.status(500).send('An error occurred while adding the URL.');
-  }
-});
-
-
-// Ping the stored URL every second
-setInterval(async () => {
-  const urls = await URLModel.find();
-  urls.forEach(urlDoc => {
-    pingURL(urlDoc.url);
-  });
-}, 1000);
 
 app.listen(PORT, () => {
   console.log(`Server is running at port: ${PORT}`);
